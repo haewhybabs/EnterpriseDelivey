@@ -33,11 +33,11 @@ public class DeliveryRequestService {
         deliveryRequest.setDriver(driver);
         deliveryRequest.setUser(user);
         deliveryRequest.setParcel(parcel);
-        deliveryRequest.setDelivery_address(deliveryRequestDTO.getDelivery_address());
         deliveryRequest.setDeliveryDate(deliveryRequestDTO.getDelivery_date());
         deliveryRequest.setDeliveryStatus(deliveryStatus);
-        deliveryRequest.setRecipient_email(deliveryRequestDTO.getRecipient_email());
-        deliveryRequest.setRecipient_phone_number(deliveryRequestDTO.getRecipient_phone_number());
+        deliveryRequest.setRecipient_address_id(deliveryRequestDTO.getRecipient_address_id());
+        deliveryRequest.setSender_address(deliveryRequestDTO.getSender_address());
+
         return deliveryRequestRepository.save(deliveryRequest);
 
     }

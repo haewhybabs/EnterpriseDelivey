@@ -50,24 +50,35 @@ CREATE TABLE `driver` (
   FOREIGN KEY (`user_id`) REFERENCES users(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `recipient_address` (
+  `id` int(200) NOT NULL AUTO_INCREMENT,
+  `user_id` int(200) NOT NULL,
+  `address` text NOT NULL,
+  `recipient_phone_number` text NOT NULL,
+  `recipient_email` varchar(255) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),  
+  FOREIGN KEY (`user_id`) REFERENCES users(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `delivery_request` (
   `id` int(255) NOT NULL AUTO_INCREMENT,
   `user_id` int(255) NOT NULL,
-  `recipient_email` varchar(255) NOT NULL,
-  `recipient_phone_number` varchar(255) NOT NULL,
   `sender_address` text NOT NULL,
   `parcel_id` int(255) NOT NULL,
   `delivery_date` datetime DEFAULT NULL,
   `delivery_status_id` int(255) NOT NULL,
   `driver_id` int(255) DEFAULT NULL,
   `delivery_address` text NOT NULL,
+  `recipient_address_id` int(255) NOT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`) REFERENCES users(`id`),  
   FOREIGN KEY (`parcel_id`) REFERENCES parcel(`id`),
   FOREIGN KEY (`delivery_status_id`) REFERENCES delivery_status(`id`),
+  FOREIGN KEY (`recipient_address_id`) REFERENCES recipient_address(`id`),
   FOREIGN KEY (`driver_id`) REFERENCES driver(`id`)      
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
