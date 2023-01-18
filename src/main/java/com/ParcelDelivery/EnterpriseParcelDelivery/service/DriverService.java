@@ -1,15 +1,23 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
 import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
+import com.ParcelDelivery.EnterpriseParcelDelivery.dto.DeliveryRequestResponseDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.DriverDTO;
+import com.ParcelDelivery.EnterpriseParcelDelivery.dto.UserDTO;
+import com.ParcelDelivery.EnterpriseParcelDelivery.entity.DeliveryRequest;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Driver;
+import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Role;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.User;
+import com.ParcelDelivery.EnterpriseParcelDelivery.factory.DriverFactory;
+import com.ParcelDelivery.EnterpriseParcelDelivery.factory.UserFactory;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.DriverRepository;
+import com.ParcelDelivery.EnterpriseParcelDelivery.repository.RoleRepository;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,29 +26,45 @@ public class DriverService {
     private DriverRepository driverRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserFactory userFactory;
 
-    public Driver saveDriver(DriverDTO driverDTO){
-        Driver driver = new Driver();
-        driver.setPhone_number(driverDTO.getPhone_number());
-        driver.setAddress(driverDTO.getAddress());
-        User user = userRepository.findById(driverDTO.getUser_id()).get();
-        if(user.getRole().getId() !=2){
-            throw new BadRequestException("Only driver can be added");
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private DriverFactory driverFactory;
+
+    public DriverDTO saveDriver(DriverDTO driverDTO){
+
+        Role role = roleRepository.findById(2).orElse(null);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setEmail(driverDTO.getEmail());
+        userDTO.setPassword(driverDTO.getPassword());
+        userDTO.setName(driverDTO.getName());
+        userDTO.setRole_id(2);
+
+        User newUser = userFactory.createEntity(userDTO,role);
+        User user = userRepository.save(newUser);
+        Driver driver = driverFactory.createEntity(driverDTO,user);
+        Driver newDriver = driverRepository.save(driver);
+        return driverFactory.createDriverDTO(newDriver);
+    }
+    public List<DriverDTO> getDrivers(){
+        List<Driver> drivers = driverRepository.findAll();
+
+        List<DriverDTO> dtos = new ArrayList<>();
+        for (Driver driver: drivers){
+            DriverDTO dto = driverFactory.createDriverDTO(driver);
+            dtos.add(dto);
         }
-        if(user==null){
-            throw new EntityNotFoundException("User not found with the id"+ driverDTO.getUser_id());
-        }
-        driver.setUser(user);
-        return driverRepository.save(driver);
+        return dtos;
 
     }
-    public List<Driver> getDrivers(){
+    public DriverDTO findByDriverId(int id){
 
-        return driverRepository.findAll();
-    }
-    public Driver findByDriverId(int id){
-
-        return driverRepository.findById(id).orElse(null);
+        Driver driver = driverRepository.findById(id).orElse(null);
+        return driverFactory.createDriverDTO(driver);
     }
     public String deleteDriver(int id){
         driverRepository.deleteById(id);

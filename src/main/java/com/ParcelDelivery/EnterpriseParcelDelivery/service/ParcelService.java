@@ -1,6 +1,8 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.dto.ParcelDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Parcel;
+import com.ParcelDelivery.EnterpriseParcelDelivery.factory.ParcelFactory;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.ParcelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,8 +14,11 @@ import java.util.List;
 public class ParcelService {
     @Autowired
     private ParcelRepository repository;
+    @Autowired
+    private ParcelFactory parcelFactory;
 
-    public Parcel saveParcel(Parcel parcel){
+    public Parcel saveParcel(ParcelDTO parcelDTO){
+        Parcel parcel = parcelFactory.createEntity(parcelDTO);
         return repository.save(parcel);
     }
 

@@ -5,12 +5,10 @@ import com.ParcelDelivery.EnterpriseParcelDelivery.dto.DeliveryRequestResponseDT
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.DeliveryRequest;
 import com.ParcelDelivery.EnterpriseParcelDelivery.service.DeliveryRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -20,16 +18,28 @@ public class DeliveryRequestController {
 
     @PostMapping("/request/create")
     public DeliveryRequestResponseDTO saveDeliveryRequest(@RequestBody @Valid DeliveryRequestDTO deliveryRequestDTO){
-        DeliveryRequest deliveryRequest = service.saveDeliveryRequest(deliveryRequestDTO);
-        DeliveryRequestResponseDTO dto = new DeliveryRequestResponseDTO();
-        dto.setId(deliveryRequest.getId());
-        dto.setDelivery_date(deliveryRequest.getDeliveryDate());
-        dto.setUser_id(deliveryRequest.getUser().getId());
-        dto.setDeliveryStatus(deliveryRequest.getDeliveryStatus());
-        dto.setSender_address(deliveryRequest.getSender_address());
-        dto.setParcel(deliveryRequest.getParcel());
-        dto.setRecipient_address_id(deliveryRequest.getRecipient_address_id());
-        dto.setDriver(deliveryRequest.getDriver());
-        return dto;
+        return service.saveDeliveryRequest(deliveryRequestDTO);
+
+    }
+    @PutMapping("/request/update")
+    public DeliveryRequestResponseDTO updateDeliveryRequest(@RequestBody @Valid DeliveryRequestDTO deliveryRequestDTO){
+        return service.updateRequest(deliveryRequestDTO);
+
+    }
+    @PutMapping("/request/assign-driver")
+    public DeliveryRequestResponseDTO assignRequestDriver(@RequestBody DeliveryRequestDTO deliveryRequestDTO){
+        return service.assignDriver(deliveryRequestDTO);
+    }
+    @PutMapping("/request/update-status")
+    public DeliveryRequestResponseDTO updateRequestStatus (@RequestBody DeliveryRequestDTO deliveryRequestDTO){
+        return service.updateRequestStatus(deliveryRequestDTO);
+    }
+    @GetMapping("/requests")
+    public List<DeliveryRequestResponseDTO> findDeliveryRequests(@RequestParam(value="driver_id",required = false) Integer driver_id){
+        return service.getDeliveryRequests(driver_id);
+    }
+    @GetMapping("/request/filter")
+    public List<DeliveryRequestResponseDTO> findDeliveryByFilter(@RequestParam(value="user_id",required = true) Integer user_id,@RequestParam(value="delivery_status_id",required = false) Integer delivery_status_id){
+        return service.getDeliveryRequestsByUserIdAndDeliveryStatusId(user_id,delivery_status_id);
     }
 }

@@ -19,6 +19,4 @@ public class DeliveryRequestResponseDTO {
     private int recipient_address_id;
     private LocalDateTime delivery_date;
 
-
-
 }

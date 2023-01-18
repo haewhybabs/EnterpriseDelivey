@@ -12,7 +12,7 @@ public class UserDTO {
     @Email
     @NotNull(message="Email is required")
     private String email;
-
+    @NotNull
     private String password;
     @NotNull
     private int role_id;

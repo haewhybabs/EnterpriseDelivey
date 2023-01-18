@@ -1,0 +1,16 @@
+package com.ParcelDelivery.EnterpriseParcelDelivery.factory;
+
+import com.ParcelDelivery.EnterpriseParcelDelivery.dto.ParcelDTO;
+import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Parcel;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ParcelFactory {
+    public Parcel createEntity(ParcelDTO dto){
+        Parcel parcel = new Parcel();
+        parcel.setName(dto.getName());
+        parcel.setDescription(dto.getDescription());
+        return parcel;
+    }
+
+}

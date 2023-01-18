@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -16,7 +17,7 @@ public class DeliveryStatusController {
     private DeliveryStatusService service;
 
     @PostMapping("/status/add")
-    public ResponseEntity<DeliveryStatus> saveStatus(DeliveryStatus deliveryStatus){
+    public ResponseEntity<DeliveryStatus> saveStatus(@RequestBody @Valid DeliveryStatus deliveryStatus){
         return new ResponseEntity<>(service.saveStatus(deliveryStatus), HttpStatus.CREATED);
     }
     @GetMapping("/statuses")
@@ -28,11 +29,11 @@ public class DeliveryStatusController {
         return service.getStatusById(id);
     }
     @PutMapping("/status/update")
-    public DeliveryStatus updateStatus(DeliveryStatus deliveryStatus){
+    public DeliveryStatus updateStatus(@RequestBody DeliveryStatus deliveryStatus){
         return service.updateStatus(deliveryStatus);
     }
-    @DeleteMapping("/status/delete")
-    public String deleteStatus(int id){
+    @DeleteMapping("/status/delete/{id}")
+    public String deleteStatus(@PathVariable int id){
         return service.deleteStatus(id);
     }
 }

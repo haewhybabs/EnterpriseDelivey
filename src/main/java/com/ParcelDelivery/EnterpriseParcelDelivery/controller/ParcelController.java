@@ -1,5 +1,6 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.controller;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.dto.ParcelDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Parcel;
 import com.ParcelDelivery.EnterpriseParcelDelivery.service.ParcelService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,9 @@ public class ParcelController {
     private ParcelService service;
 
    @PostMapping("/parcel/add")
-    public Parcel addParcel(@RequestBody Parcel parcel){
+    public Parcel addParcel(@RequestBody ParcelDTO parcelDTO){
 
-       return service.saveParcel(parcel);
+       return service.saveParcel(parcelDTO);
     }
     @GetMapping("/parcels")
     public List<Parcel> findAllParcels(){

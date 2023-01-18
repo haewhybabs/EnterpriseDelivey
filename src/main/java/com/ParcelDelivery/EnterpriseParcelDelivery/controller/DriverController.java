@@ -20,7 +20,7 @@ public class DriverController {
     private DriverService service;
 
     @PostMapping("/driver/add")
-    public ResponseEntity<Driver> saveDriver(@RequestBody @Valid DriverDTO driverDTO){
+    public ResponseEntity<DriverDTO> saveDriver(@RequestBody @Valid DriverDTO driverDTO){
         return new ResponseEntity<>(service.saveDriver(driverDTO), HttpStatus.CREATED);
     }
     @GetMapping("/drivers")
@@ -28,7 +28,7 @@ public class DriverController {
         return ResponseEntity.ok(service.getDrivers());
     }
     @GetMapping("/driver/{id}")
-    public Driver getDriverById(@PathVariable int id){
+    public DriverDTO getDriverById(@PathVariable int id){
         return service.findByDriverId(id);
     }
     @PutMapping("/driver/update")

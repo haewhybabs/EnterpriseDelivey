@@ -3,6 +3,7 @@ package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.UserDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Role;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.User;
+import com.ParcelDelivery.EnterpriseParcelDelivery.factory.UserFactory;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.RoleRepository;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +26,15 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private UserFactory userFactory;
+
     public User saveUser(UserDTO userDTO){
-        User user = new User();
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
-        user.setPassword(encryptedPassword);
-        Role role = roleRepository.findById(userDTO.getRole_id()).get();
+        Role role = roleRepository.findById(userDTO.getRole_id()).orElse(null);
         if (role == null) {
             throw new EntityNotFoundException("Role not found with id: " + userDTO.getRole_id());
         }
-        user.setRole(role);
+        User user = userFactory.createEntity(userDTO,role);
         return repository.save(user);
 
     }

@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class DriverDTO {
+    private int id;
     @NotNull
     private int user_id;
     @NotNull(message="Phone number is required")
@@ -13,5 +14,11 @@ public class DriverDTO {
     @NotNull(message="Address is required")
     private String address;
     @NotNull
-    private int role_id;
+    private String email;
+    @NotNull
+    private String name;
+    @NotNull
+    private String password;
+
+
 }
