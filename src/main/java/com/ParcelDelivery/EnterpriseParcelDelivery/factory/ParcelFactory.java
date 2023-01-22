@@ -10,6 +10,7 @@ public class ParcelFactory {
         Parcel parcel = new Parcel();
         parcel.setName(dto.getName());
         parcel.setDescription(dto.getDescription());
+        parcel.setUser_id(dto.getUser_id());
         return parcel;
     }
 

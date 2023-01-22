@@ -1,5 +1,6 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.User;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +23,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = repository.findByEmail(email);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+            throw new BadRequestException("User not found");
         }
-//        return new org.springframework.security.core.userdetails.User(user.getEmail(),user.getPassword(),new ArrayList<>());
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(), user.getPassword(), List.of(new SimpleGrantedAuthority(user.getRole().getName())));
     }

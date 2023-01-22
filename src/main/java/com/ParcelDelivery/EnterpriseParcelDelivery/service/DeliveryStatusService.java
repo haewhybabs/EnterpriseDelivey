@@ -1,12 +1,12 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.DeliveryStatus;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.DeliveryStatusRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 @Service
 public class DeliveryStatusService {
@@ -25,7 +25,7 @@ public class DeliveryStatusService {
     public DeliveryStatus updateStatus(DeliveryStatus deliveryStatus){
         DeliveryStatus existingStatus = repository.findById(deliveryStatus.getId()).orElse(null);
         if(existingStatus==null){
-            throw new EntityNotFoundException("Status not found");
+            throw new BadRequestException("Status not found");
         }
         existingStatus.setStatus(deliveryStatus.getStatus());
         return repository.save(existingStatus);

@@ -28,4 +28,13 @@ public class RecipientAddressFactory {
         recipientAddress.setRecipient_phone_number(dto.getRecipient_phone_number());
         return recipientAddress;
     }
+    public RecipientAddressDTO responseEntity(RecipientAddress recipientAddress){
+        RecipientAddressDTO dto = new RecipientAddressDTO();
+        dto.setUser_id(recipientAddress.getUser().getId());
+        dto.setId(recipientAddress.getId());
+        dto.setAddress(recipientAddress.getAddress());
+        dto.setRecipient_email(recipientAddress.getRecipient_email());
+        dto.setRecipient_phone_number(recipientAddress.getRecipient_phone_number());
+        return dto;
+    }
 }

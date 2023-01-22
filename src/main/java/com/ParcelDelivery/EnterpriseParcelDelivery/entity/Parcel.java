@@ -17,6 +17,7 @@ public class Parcel {
     private int id;
     private String name;
     private String description;
+    private int user_id;
 
 //    @OneToOne(mappedBy = "deliveryRequest")
 //    private DeliveryRequest deliveryRequest;

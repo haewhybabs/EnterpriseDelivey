@@ -8,8 +8,10 @@ import com.ParcelDelivery.EnterpriseParcelDelivery.repository.RecipientAddressRe
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 @Slf4j
 @Service
@@ -25,24 +27,44 @@ public class RecipientAddressService {
 
 
 
-    public RecipientAddress saveRecipientAddress(RecipientAddressDTO recipientAddressDTO){
+    public RecipientAddressDTO saveRecipientAddress(RecipientAddressDTO recipientAddressDTO){
+//        recipientAddressDTO.setUser_id();
         RecipientAddress recipientAddress = recipientAddressFactory.createEntity(recipientAddressDTO);
-        return repository.save(recipientAddress);
+        repository.save(recipientAddress);
+        RecipientAddressDTO dto = recipientAddressFactory.responseEntity(recipientAddress);
+        return dto;
     }
 
-    public List<RecipientAddress> getRecipientAddresses(){
-        return repository.findAll();
+    public List<RecipientAddressDTO> getRecipientAddresses(){
+        List<RecipientAddress> recipientAddresses = repository.findAll();
+        List<RecipientAddressDTO> dtos = new ArrayList<>();
+        for (RecipientAddress recipientAddress: recipientAddresses){
+            RecipientAddressDTO dto = recipientAddressFactory.responseEntity(recipientAddress);
+            dtos.add(dto);
+        }
+        return dtos;
+
     }
-    public RecipientAddress getRecipientAddressById(int id){
-        return repository.findById(id).orElse(null);
+    public RecipientAddressDTO getRecipientAddressById(int id){
+        RecipientAddress recipientAddress = repository.findById(id).orElse(null);
+        RecipientAddressDTO dto = recipientAddressFactory.responseEntity(recipientAddress);
+        return dto;
     }
-    public List<RecipientAddress> findRecipientAddressByUserId(int user_id){
-        return repository.findRecipientAddressByUserId(user_id);
+    public List<RecipientAddressDTO> findRecipientAddressByUserId(int user_id){
+         List<RecipientAddress> recipientAddresses = repository.findRecipientAddressByUserId(user_id);
+        List<RecipientAddressDTO> dtos = new ArrayList<>();
+        for (RecipientAddress recipientAddress: recipientAddresses){
+            RecipientAddressDTO dto = recipientAddressFactory.responseEntity(recipientAddress);
+            dtos.add(dto);
+        }
+        return dtos;
     }
-    public RecipientAddress updateRecipientAddress(RecipientAddressDTO recipientAddressDTO){
+    public RecipientAddressDTO updateRecipientAddress(RecipientAddressDTO recipientAddressDTO){
         RecipientAddress existingAddress = repository.findById(recipientAddressDTO.getId()).orElse(null);
         RecipientAddress recipientAddress = recipientAddressFactory.updateEntity(existingAddress,recipientAddressDTO);
-        return repository.save(recipientAddress);
+        RecipientAddress updatedAddress = repository.save(recipientAddress);
+        RecipientAddressDTO dto = recipientAddressFactory.responseEntity(updatedAddress);
+        return dto;
     }
     public String deleteRecipientAddress(int id){
         repository.deleteById(id);

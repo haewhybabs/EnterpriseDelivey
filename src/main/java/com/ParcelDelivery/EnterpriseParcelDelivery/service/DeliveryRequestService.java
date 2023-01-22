@@ -1,5 +1,6 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.DeliveryRequestDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.DeliveryRequestResponseDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.*;
@@ -8,7 +9,6 @@ import com.ParcelDelivery.EnterpriseParcelDelivery.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class DeliveryRequestService {
         DeliveryRequest existingRequest  = deliveryRequestRepository.findById(deliveryRequestDTO.getId()).orElse(null);
         DeliveryStatus deliveryStatus = deliveryStatusRepository.findById(deliveryRequestDTO.getDelivery_status_id()).orElse(null);
         if(existingRequest==null){
-            throw new EntityNotFoundException("Request not found");
+            throw new BadRequestException("Request not found");
         }
         existingRequest.setDeliveryStatus(deliveryStatus);
         deliveryRequestRepository.save(existingRequest);
@@ -54,10 +54,10 @@ public class DeliveryRequestService {
         DeliveryRequest existingRequest  = deliveryRequestRepository.findById(deliveryRequestDTO.getId()).orElse(null);
         Driver driver = driverRepository.findById(deliveryRequestDTO.getDriver_id()).orElse(null);
         if(driver==null){
-            throw new EntityNotFoundException("Driver not found");
+            throw new BadRequestException("Driver not found");
         }
         if(existingRequest==null){
-            throw new EntityNotFoundException("Request not found");
+            throw new BadRequestException("Request not found");
         }
         existingRequest.setDriver(driver);
         deliveryRequestRepository.save(existingRequest);
@@ -70,7 +70,7 @@ public class DeliveryRequestService {
         DeliveryStatus deliveryStatus = deliveryStatusRepository.findById(1).orElse(null);
         DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(deliveryRequestDTO.getId()).orElse(null);
         if(deliveryRequest==null){
-            throw new EntityNotFoundException("Request not found");
+            throw new BadRequestException("Request not found");
         }
         DeliveryRequest updateRequest = deliveryRequestFactory.updateEntity(deliveryRequest,deliveryRequestDTO,driver,user,parcel,deliveryStatus);
         deliveryRequestRepository.save(updateRequest);
@@ -94,6 +94,9 @@ public class DeliveryRequestService {
     }
     public DeliveryRequestResponseDTO findDeliveryRequestById(int id){
         DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(id).orElse(null);
+        if(deliveryRequest==null){
+            throw new BadRequestException("Request not found");
+        }
         return deliveryRequestFactory.createEntityResponse(deliveryRequest);
     }
     public List<DeliveryRequestResponseDTO> getDeliveryRequestsByDriverId(int driver_id){

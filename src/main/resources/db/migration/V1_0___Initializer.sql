@@ -34,9 +34,11 @@ CREATE TABLE `parcel` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL,
+  `user_id` int(255) NOT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)  
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES users(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `driver` (
@@ -59,7 +61,7 @@ CREATE TABLE `recipient_address` (
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),  
-  FOREIGN KEY (`user_id`) REFERENCES users(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`user_id`) REFERENCES users(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `delivery_request` (
@@ -97,7 +99,10 @@ INSERT INTO roles (name) VALUES ('Driver');
 INSERT INTO roles (name) VALUES ('Admin');
 
 INSERT INTO users (name,email,password,role_id)
-VALUES ('Ayobami','babalolaisaac@gmail.com','password','1');
+VALUES ('Ayobami Sender','babalolaisaac@gmail.com','$2a$10$fHL9E/oj9CHDJ5yVg8zJnu4EFqv6rE67pifkN2AAvhKJH8ct.2Wj6','1');
+
+INSERT INTO users (name,email,password,role_id)
+VALUES ('Ayobami Admin','babalolaisaac2@gmail.com','$2a$10$fHL9E/oj9CHDJ5yVg8zJnu4EFqv6rE67pifkN2AAvhKJH8ct.2Wj6','3');
 
 INSERT INTO delivery_status (status) VALUES ('Awaiting delivery');
 INSERT INTO delivery_status (status) VALUES ('Processing');

@@ -1,5 +1,6 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.ParcelDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Parcel;
 import com.ParcelDelivery.EnterpriseParcelDelivery.factory.ParcelFactory;
@@ -7,7 +8,6 @@ import com.ParcelDelivery.EnterpriseParcelDelivery.repository.ParcelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
@@ -28,7 +28,7 @@ public class ParcelService {
     public Parcel getParcelById(int id){
         Parcel parcel = repository.findById(id).orElse(null);
         if (parcel==null){
-            throw new EntityNotFoundException("Parcel not found with id: " + id);
+            throw new BadRequestException("Parcel not found with id: " + id);
         }
         return parcel;
     }

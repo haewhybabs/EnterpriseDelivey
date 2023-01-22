@@ -2,8 +2,11 @@ package com.ParcelDelivery.EnterpriseParcelDelivery.controller;
 
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.ParcelDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Parcel;
+import com.ParcelDelivery.EnterpriseParcelDelivery.entity.User;
 import com.ParcelDelivery.EnterpriseParcelDelivery.service.ParcelService;
+import com.ParcelDelivery.EnterpriseParcelDelivery.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,9 +17,13 @@ public class ParcelController {
     @Autowired
     private ParcelService service;
 
-   @PostMapping("/parcel/add")
-    public Parcel addParcel(@RequestBody ParcelDTO parcelDTO){
+    @Autowired
+    private UserService userService;
 
+   @PostMapping("/parcel/add")
+    public Parcel addParcel(@RequestBody ParcelDTO parcelDTO, @AuthenticationPrincipal User user){
+       User loggedInUser = userService.authenticatedUser(user);
+       parcelDTO.setUser_id(loggedInUser.getId());
        return service.saveParcel(parcelDTO);
     }
     @GetMapping("/parcels")

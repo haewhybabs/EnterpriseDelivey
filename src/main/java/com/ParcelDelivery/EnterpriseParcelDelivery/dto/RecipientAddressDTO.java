@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class RecipientAddressDTO {
     private int id;
-    @NotNull
+
     private int user_id;
     @NotNull
     private String address;

@@ -1,8 +1,11 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.controller;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.AuthDTO;
+import com.ParcelDelivery.EnterpriseParcelDelivery.dto.AuthResponseDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.dto.UserDTO;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.User;
+import com.ParcelDelivery.EnterpriseParcelDelivery.service.CustomUserDetailsService;
 import com.ParcelDelivery.EnterpriseParcelDelivery.service.UserService;
 import com.ParcelDelivery.EnterpriseParcelDelivery.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -35,12 +38,22 @@ public class UserController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
 
 
 
     @PostMapping("/user/add")
     public ResponseEntity<User> saveUser(@RequestBody @Valid  UserDTO userDTO){
-        log.info("request try info{}",userDTO);
+        userDTO.setRole_id(1);
+        return new ResponseEntity<>(service.saveUser(userDTO), HttpStatus.CREATED);
+
+    }
+    @PostMapping("/user/admin/add")
+    @PreAuthorize("hasAuthority('Admin')")
+    public ResponseEntity<User> createAdminAccount(@RequestBody @Valid  UserDTO userDTO){
+        userDTO.setRole_id(3);
         return new ResponseEntity<>(service.saveUser(userDTO), HttpStatus.CREATED);
 
     }
@@ -69,16 +82,23 @@ public class UserController {
         return service.deleteUser(id);
     }
     @PostMapping("/authenticate")
-    public String generateToken(@RequestBody AuthDTO authDTO) throws Exception{
+    public AuthResponseDTO generateToken(@RequestBody AuthDTO authDTO) throws Exception{
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authDTO.getEmail(), authDTO.getPassword())
             );
         }catch(Exception ex){
-            throw new Exception("Invalid email and password");
+            throw new BadRequestException("Invalid email and password");
         }
-        return jwtUtil.generateToken(authDTO.getEmail());
-
+        String token = jwtUtil.generateToken(authDTO.getEmail());
+        User user = service.findUserByEmail(authDTO.getEmail());
+        AuthResponseDTO response = new AuthResponseDTO();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setName(user.getName());
+        response.setToken(token);
+        response.setRole_id(user.getRole().getId());
+        return response;
     }
 
     @GetMapping("/authorities")
@@ -89,9 +109,7 @@ public class UserController {
     }
 
     @GetMapping("/user/authenticated")
-    public UserDetails getCurrentUser(@AuthenticationPrincipal User user) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userDetails;
+    public User getCurrentUser(@AuthenticationPrincipal User user) {
+        return service.authenticatedUser(user);
     }
 }

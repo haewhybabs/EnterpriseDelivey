@@ -1,11 +1,11 @@
 package com.ParcelDelivery.EnterpriseParcelDelivery.service;
 
+import com.ParcelDelivery.EnterpriseParcelDelivery.advice.BadRequestException;
 import com.ParcelDelivery.EnterpriseParcelDelivery.entity.Role;
 import com.ParcelDelivery.EnterpriseParcelDelivery.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
@@ -22,7 +22,7 @@ public class RoleService {
     public Role findRoleById(int id){
         Role role = repository.findById(id).orElse(null);
         if(role==null){
-            throw new EntityNotFoundException("Role not found with id"+id);
+            throw new BadRequestException("Role not found with id"+id);
         }
         return role;
     }

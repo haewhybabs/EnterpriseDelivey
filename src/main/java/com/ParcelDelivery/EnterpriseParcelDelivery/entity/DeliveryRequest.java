@@ -29,7 +29,7 @@ public class DeliveryRequest {
     @Column(name = "delivery_date")
     private LocalDateTime deliveryDate;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "delivery_status_id")
     private DeliveryStatus deliveryStatus;
 

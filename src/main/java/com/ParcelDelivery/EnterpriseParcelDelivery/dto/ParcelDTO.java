@@ -10,4 +10,6 @@ public class ParcelDTO {
     private String name;
     @NotNull
     private  String  description;
+
+    private int user_id;
 }
