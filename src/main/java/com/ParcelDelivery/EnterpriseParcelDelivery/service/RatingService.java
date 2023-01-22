@@ -33,11 +33,11 @@ public class RatingService {
 
     }
     public RatingDTO findRatingById(int id){
-        DeliveryRequest deliveryRequest =  deliveryRequestRepository.findById(id).orElse(null);
-        if(deliveryRequest==null){
-            throw new BadRequestException("Delivery request not found");
-        }
+
         Rating rating  = repository.findById(id).orElse(null);
+        if(rating==null){
+            throw new BadRequestException("Rating not found");
+        }
         RatingDTO dto = ratingFactory.createDTO(rating);
         return dto;
     }

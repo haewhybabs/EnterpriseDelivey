@@ -16,8 +16,8 @@ public class RatingController {
 
         return service.createRating(ratingDTO);
     }
-    @GetMapping("rating/view/{delivery_request_id}")
-    public RatingDTO viewRatingById(@PathVariable int delivery_request_id){
-        return service.findRatingById(delivery_request_id);
+    @GetMapping("rating/view/{rating_id}")
+    public RatingDTO viewRatingById(@PathVariable int rating_id){
+        return service.findRatingById(rating_id);
     }
 }
