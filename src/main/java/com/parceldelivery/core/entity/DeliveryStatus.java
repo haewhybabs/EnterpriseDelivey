@@ -3,6 +3,9 @@ package com.parceldelivery.core.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "delivery_statuses")
 public class DeliveryStatus {
@@ -13,7 +16,9 @@ public class DeliveryStatus {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     public Long getId() {

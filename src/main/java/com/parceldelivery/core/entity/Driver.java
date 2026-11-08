@@ -1,8 +1,12 @@
 package com.parceldelivery.core.entity;
 
 import jakarta.persistence.*;
+
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,7 +28,9 @@ public class Driver {
     @Column(nullable = false)
     private String address;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     public Long getId() {

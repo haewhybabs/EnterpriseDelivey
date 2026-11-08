@@ -3,6 +3,9 @@ package com.parceldelivery.core.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "recipient_addresses")
 public class RecipientAddress {
@@ -24,7 +27,9 @@ public class RecipientAddress {
     @Column(nullable = false)
     private String recipientEmail;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     public Long getId() {
