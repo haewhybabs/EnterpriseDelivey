@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RecipientAddressRequestDTO {
-    private Long userId;
     private String address;
     private String recipientPhoneNumber;
     private String recipientEmail;

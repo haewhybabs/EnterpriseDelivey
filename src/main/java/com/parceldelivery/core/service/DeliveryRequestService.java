@@ -20,7 +20,7 @@ import com.parceldelivery.core.repository.DeliveryStatusRepository;
 import com.parceldelivery.core.repository.DriverRepository;
 import com.parceldelivery.core.repository.ParcelRepository;
 import com.parceldelivery.core.repository.RecipientAddressRepository;
-import com.parceldelivery.core.repository.UserRepository;
+import com.parceldelivery.core.security.CurrentUserProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class DeliveryRequestService {
     private static final String DEFAULT_STATUS = "Awaiting delivery";
     private final DeliveryRequestRepository deliveryRequestRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserProvider currentUserProvider;
     private final DeliveryStatusRepository deliveryStatusRepository;
     private final ParcelRepository parcelRepository;
     private final RecipientAddressRepository recipientAddressRepository;
@@ -37,8 +37,7 @@ public class DeliveryRequestService {
     private final DeliveryRequestMapper deliveryRequestMapper;
 
     public DeliveryRequestResponseDTO createDeliveryRequest(DeliveryRequestRequestDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + dto.getUserId()));
+        User user = currentUserProvider.getCurrentUser();
 
         DeliveryStatus deliveryStatus = deliveryStatusRepository.findByName(DEFAULT_STATUS)
                 .orElseThrow(() -> new IllegalStateException(

@@ -8,7 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DeliveryRequestRequestDTO {
-    private Long userId;
     private Long recipientAddressId;
     private Long parcelId;
     private String senderAddress;

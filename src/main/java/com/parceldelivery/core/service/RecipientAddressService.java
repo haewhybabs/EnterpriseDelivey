@@ -6,10 +6,9 @@ import com.parceldelivery.core.dto.RecipientAddressRequestDTO;
 import com.parceldelivery.core.dto.RecipientAddressResponseDTO;
 import com.parceldelivery.core.entity.RecipientAddress;
 import com.parceldelivery.core.entity.User;
-import com.parceldelivery.core.exception.ResourceNotFoundException;
 import com.parceldelivery.core.mapper.RecipientAddressMapper;
 import com.parceldelivery.core.repository.RecipientAddressRepository;
-import com.parceldelivery.core.repository.UserRepository;
+import com.parceldelivery.core.security.CurrentUserProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,12 +16,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RecipientAddressService {
     private final RecipientAddressRepository recipientAddressRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserProvider currentUserProvider;
     private final RecipientAddressMapper recipientAddressMapper;
 
     public RecipientAddressResponseDTO createRecipientAddress(RecipientAddressRequestDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
+        User user = currentUserProvider.getCurrentUser();
 
         RecipientAddress recipientAddress = new RecipientAddress();
         recipientAddress.setUser(user);

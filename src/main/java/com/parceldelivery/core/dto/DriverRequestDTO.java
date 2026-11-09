@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DriverRequestDTO {
-    private Long userId;
     private String phoneNumber;
     private String address;
 
