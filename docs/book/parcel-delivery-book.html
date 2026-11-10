@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rebuilding Parcel Delivery: A Backend Engineer's Field Notes</title>
+<style>
+  @page { margin: 2.2cm 2cm; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 11.5pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  h1, h2, h3, h4 { font-family: 'Helvetica Neue', Arial, sans-serif; color: #0b2545; }
+  .titlepage {
+    text-align: center;
+    padding-top: 22%;
+    page-break-after: always;
+  }
+  .titlepage h1 { font-size: 30pt; margin-bottom: 0.2em; }
+  .titlepage .subtitle { font-size: 14pt; color: #444; margin-bottom: 2em; }
+  .titlepage .meta { font-size: 11pt; color: #666; margin-top: 4em; }
+  .toc { page-break-after: always; }
+  .toc h1 { border-bottom: 2px solid #0b2545; padding-bottom: 0.2em; }
+  .toc ol { line-height: 2; font-size: 11.5pt; }
+  .toc ol > li { margin-bottom: 0.3em; }
+  .chapter { page-break-before: always; }
+  h1.chapter-title {
+    font-size: 22pt;
+    border-bottom: 3px solid #0b2545;
+    padding-bottom: 0.3em;
+    margin-top: 0;
+  }
+  .chapter-kicker {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 9.5pt;
+    color: #888;
+    margin-bottom: 0.2em;
+  }
+  h2 { font-size: 15pt; margin-top: 1.8em; border-left: 4px solid #0b2545; padding-left: 0.5em; }
+  h3 { font-size: 12.5pt; margin-top: 1.4em; color: #333; }
+  p { margin: 0.9em 0; text-align: justify; }
+  code {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    background: #f1f3f5;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+    color: #9d174d;
+  }
+  pre {
+    background: #0b2545;
+    color: #e6edf3;
+    padding: 1em 1.2em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  .callout {
+    background: #eef4ff;
+    border-left: 4px solid #2563eb;
+    padding: 0.8em 1.1em;
+    margin: 1.2em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout.warning { background: #fff7e6; border-left-color: #d97706; }
+  .callout.danger { background: #fdecea; border-left-color: #dc2626; }
+  .callout .label { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3em; }
+  .callout.warning .label { color: #b45309; }
+  .callout.danger .label { color: #b91c1c; }
+  .callout.info .label { color: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; margin: 1.2em 0; font-size: 10.5pt; }
+  th, td { border: 1px solid #ccc; padding: 0.5em 0.7em; text-align: left; }
+  th { background: #0b2545; color: white; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  .timeline-item { margin-bottom: 1em; padding-left: 1em; border-left: 3px solid #cbd5e1; }
+  .footer-note { font-size: 9pt; color: #999; text-align: center; margin-top: 3em; }
+  ul, ol { margin: 0.8em 0; padding-left: 1.6em; }
+  li { margin-bottom: 0.4em; }
+  .glossary dt { font-weight: bold; font-family: 'Helvetica Neue', Arial, sans-serif; margin-top: 0.9em; color: #0b2545; }
+  .glossary dd { margin-left: 0; margin-bottom: 0.6em; }
+</style>
+</head>
+<body>
+
+<div class="titlepage">
+  <div class="chapter-kicker">Field Notes</div>
+  <h1>Rebuilding Parcel Delivery</h1>
+  <div class="subtitle">A Backend Engineer's Field Notes on Relearning Spring Boot<br>from the Ground Up, Line by Line</div>
+  <div class="meta">
+    Compiled from a hands-on rebuild of the EnterpriseParcelDelivery project<br>
+    Written for a backend engineer returning after years focused on mobile<br>
+    First edition &mdash; to be revised as the project continues
+  </div>
+</div>
+
+<div class="toc">
+<h1>Table of Contents</h1>
+<ol>
+  <li>Why We Tore It Down and Started Over</li>
+  <li>Laying the Foundation: Project Setup and Tooling</li>
+  <li>The Pantry: Postgres and Docker</li>
+  <li>Modeling the World: Entities and Relationships</li>
+  <li>Cutting the Boilerplate: Lombok</li>
+  <li>Repositories: Talking to the Database Without Writing SQL</li>
+  <li>DTOs and Mappers: Never Hand Over the Database Directly</li>
+  <li>Services, Controllers, and Getting Errors Right</li>
+  <li>The Core Business Flow, End to End</li>
+  <li><strong>JWT Authentication: A Chapter of Its Own</strong></li>
+  <li>The Bugs That Taught the Most</li>
+  <li>What's Left: The Road to Production</li>
+  <li>Appendix: Glossary of Terms</li>
+</ol>
+</div>
+
+<!-- ================= CHAPTER 1 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 1</div>
+<h1 class="chapter-title">Why We Tore It Down and Started Over</h1>
+
+<p>Years ago, a Spring Boot project called <em>EnterpriseParcelDelivery</em> got built. It worked. It modeled a real business &mdash; users send parcels, drivers deliver them, recipients receive them, senders rate the experience. It used real design-pattern vocabulary: factories, services, repositories, DTOs. On paper, it looked like serious backend work.</p>
+
+<p>Then years passed on mobile engineering, and the backend muscle went quiet. The plan to get it back wasn't to read about Spring Boot &mdash; it was to rebuild this exact project, from an empty folder, typing almost every line by hand, verifying every single claim against a real running database instead of trusting that code "probably works."</p>
+
+<h2>The honest audit of the old project</h2>
+<p>Before touching any code, the old project got a real review, not a nostalgic glance. A few things stood out:</p>
+<ul>
+  <li><strong>The "Factory" classes weren't factories.</strong> In proper object-oriented design, a Factory decides <em>which class</em> to instantiate based on some condition. The old project's <code>DeliveryRequestFactory</code>, <code>UserFactory</code>, and friends did something much simpler: they copied fields from a DTO into an Entity, and from an Entity into a response DTO. That's a <strong>Mapper</strong>, not a Factory. Calling it the wrong name in an interview, when a sharp interviewer asks "so what varies at runtime here?", is exactly the kind of gap that costs credibility. This correction became the seed of a whole rebuilding philosophy: name things by what they actually do, not by what sounds impressive.</li>
+  <li><strong>The tooling was years out of date.</strong> Spring Boot 2.7.6 (end of life), a JWT library (<code>jjwt 0.9.1</code>) with known vulnerabilities, and a Spring Security base class (<code>WebSecurityConfigurerAdapter</code>) that has since been deleted entirely from the framework.</li>
+  <li><strong>The security was broken in a way that would fail any real review.</strong> The JWT signing secret was the literal string <code>"password1"</code>, hardcoded directly in Java source and checked into version control. Tokens lived for 504 hours (21 days).</li>
+  <li><strong>There were no transactions anywhere</strong>, despite several service methods writing across four or five separate database tables in sequence. If anything failed halfway, the data would be left in an inconsistent state.</li>
+  <li><strong>Errors were conflated.</strong> "This doesn't exist" and "you sent me garbage" were both handled by the same exception type, returning the same HTTP 400 status &mdash; even though they mean genuinely different things to a client.</li>
+</ul>
+
+<div class="callout info">
+  <span class="label">The core decision</span>
+  None of this made the old project worthless. It made it a <em>blueprint</em>: a complete, correct description of what the system needs to do (the tables, the relationships, the feature list), stripped of any temptation to copy-paste the actual implementation. The rebuild uses the blueprint, not the code.
+</div>
+
+<h2>How the reset actually happened</h2>
+<p>Git made this safe. The old code was never deleted &mdash; it was tagged onto a branch called <code>legacy-reference</code>, left exactly as it was, permanently available to glance back at. Then a brand new branch, <code>rebuild-2026</code>, was created as an <strong>orphan branch</strong> &mdash; meaning it starts with zero shared history with the old code, a genuinely empty slate, not a copy with the old files just sitting there unused.</p>
+
+<p>Two kinds of "cleaning" happened on top of that. The first was mechanical housekeeping: deleting the Maven build output folder (<code>target/</code>, which regenerates every time you build and should never be tracked by git), and Mac-specific junk files (<code>.DS_Store</code>). The second, more important kind, was a mental discipline: treat the old project as a reference document to be read, never a file to be copied into the new one.</p>
+
+<h2>The four-languages temptation, and why it was rejected</h2>
+<p>The original plan was ambitious: rebuild this same project four separate times, in Spring Boot, Node.js, Go, and Django/FastAPI, to demonstrate broad backend fluency. A second opinion pushed back hard on this, and the pushback held up under scrutiny: four shallow rebuilds teach the same CRUD endpoints in four different syntaxes. By the third language, nothing new is being learned &mdash; just translation. A hiring manager looking at four similar-looking repositories sees "knows the basics everywhere," not "can run a production backend."</p>
+
+<p>The revised plan: go genuinely deep on one stack (Spring Boot, since it matches prior experience and dominates UK/enterprise/fintech hiring), rebuild it to an actual 2026 production standard (proper transactions, real security, caching, tests, deployment), and only then introduce a second language as a <em>deliberate architectural choice</em> &mdash; splitting off one real microservice (originally planned as a notifications/tracking service in FastAPI) that talks to the Spring Boot core over a real contract, rather than existing as a parallel, disconnected rewrite.</p>
+
+</div>
+
+<!-- ================= CHAPTER 2 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 2</div>
+<h1 class="chapter-title">Laying the Foundation: Project Setup and Tooling</h1>
+
+<h2>The kitchen analogy</h2>
+<p>Before any backend writes a single meaningful line of business logic, it needs four things, no more: <strong>a door</strong> that listens for incoming requests, <strong>a filing system</strong> that organizes data flowing in and out, <strong>a pantry</strong> where information is actually stored long-term, and <strong>a bouncer</strong> deciding who's allowed to ask for what. Everything else &mdash; every annotation, every library, every clever pattern &mdash; is detail layered on top of those four ideas.</p>
+
+<h2>Picking the toolchain, and getting surprised by it</h2>
+<p>The project was generated using Spring Initializr &mdash; the standard way nearly every real Spring Boot project begins, rather than hand-writing a build file from memory. The first real lesson arrived immediately and unplanned: querying Spring Initializr's live metadata revealed that <strong>Spring Boot 4.1.2</strong> was the current stable release, not the 3.x line that older training material or memory would suggest. This mattered enough to call out explicitly: when the ecosystem moves faster than what's in your head, trust the live source of truth (the actual package registry, the actual compiler output) over what you remember.</p>
+
+<p>Spring Boot 4 also quietly renamed some familiar starters &mdash; <code>spring-boot-starter-web</code> became <code>spring-boot-starter-webmvc</code>, and the old single <code>spring-boot-starter-test</code> split into feature-specific test starters. None of this was guessed; it was confirmed by letting Maven actually try to resolve the dependencies and reading the real error messages when a version string was wrong.</p>
+
+<h2>Two real debugging detours, both instructive</h2>
+
+<div class="callout warning">
+  <span class="label">Detour One: the missing wrapper</span>
+  The Maven Wrapper (<code>mvnw</code>) is a script that auto-downloads the exact right build tool version, so nobody needs Maven installed globally. Its companion folder, <code>.mvn/</code>, starts with a dot &mdash; which makes it <em>hidden</em> on a Mac. Finder's double-click unzip silently dropped that hidden folder during extraction, leaving the wrapper script with no instructions to follow. The fix: re-fetch the project via the command line (<code>curl</code> + <code>unzip</code>), which doesn't have Finder's blind spot for dotfiles.
+</div>
+
+<div class="callout warning">
+  <span class="label">Detour Two: the version string typo</span>
+  Spring Initializr's own metadata listed the Spring Boot version with a legacy <code>.RELEASE</code> suffix (a naming convention the project dropped years ago in its actual published artifacts). Copying that string literally into <code>pom.xml</code> caused Maven to search for a version that doesn't exist on Maven Central. The fix was found by querying Maven Central's own metadata directly and comparing it to what had been typed &mdash; the real artifact version was simply <code>4.1.2</code>, no suffix.
+</div>
+
+<h2>Java 21, and a small machine-setup wrinkle</h2>
+<p>The machine only had Java 17 installed. Java 21 was chosen deliberately for currency (it's the newer LTS release, and its headline feature, virtual threads, is a legitimate talking point in a backend interview about concurrency). It was installed via Homebrew, but deliberately <em>not</em> symlinked into the system Java location (which would have needed <code>sudo</code>). Instead, every Maven command runs with an explicit environment variable:</p>
+<pre><code>JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./mvnw spring-boot:run</code></pre>
+<p>This is a small but real lesson in itself: you don't always need administrator privileges to point a build tool at a specific tool version. An environment variable, scoped to just the one command, is often enough.</p>
+
+</div>
+
+<!-- ================= CHAPTER 3 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 3</div>
+<h1 class="chapter-title">The Pantry: Postgres and Docker</h1>
+
+<p>A backend with no database is a kitchen with an empty pantry &mdash; the lights can be on, the door can be open, but there's nothing to actually serve. This chapter is about standing up that pantry without permanently installing Postgres onto a personal machine.</p>
+
+<h2>Docker Compose, explained without jargon</h2>
+<p>Docker lets you describe "I want a Postgres database running in its own isolated little box" as a short text file, and have it simply appear &mdash; then vanish cleanly later, with zero leftover mess on the host machine. That text file is <code>docker-compose.yml</code>:</p>
+<pre><code>services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: parcel_delivery
+      POSTGRES_USER: parcel_app
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:</code></pre>
+
+<p>Reading it plainly: grab the official pre-built Postgres version 17 image rather than building one from scratch; create a database called <code>parcel_delivery</code> with a specific login; expose Postgres's internal port 5432 to the outside world so the app (running directly on the host, not inside Docker) can reach it; and keep the actual data files on a named, persistent volume so stopping the container doesn't throw away everything stored in it.</p>
+
+<h2>A real typo-hunt, worth retelling</h2>
+<p>The first attempt at this file had four separate mistakes, each instructive on its own:</p>
+<table>
+<tr><th>Mistake</th><th>Why it mattered</th></tr>
+<tr><td><code>postgress</code> instead of <code>postgres</code> (image name)</td><td>Docker Hub has no image with that name &mdash; the pull fails outright.</td></tr>
+<tr><td><code>POSTGRESS_DB</code>, <code>_USER</code>, <code>_PASSWORD</code> (extra S)</td><td>The official image only recognizes the exact spelling <code>POSTGRES_*</code>. Misspelled variables are silently ignored, and with no password set at all, the container refuses to boot as a safety measure.</td></tr>
+<tr><td><code>volume:</code> instead of <code>volumes:</code>, wrongly indented</td><td>YAML is whitespace-sensitive. The wrong indentation nested this block <em>inside</em> <code>services:</code>, which Docker Compose interpreted as "there's a service literally called <code>volume</code>" &mdash; a structurally different, invalid document.</td></tr>
+<tr><td>Mismatched volume name (<code>pdgata</code> vs. <code>pgdata</code>)</td><td>The mount reference and the declared volume name must be the identical string, or Docker treats them as two unrelated things.</td></tr>
+</table>
+
+<p>Every one of these is the kind of mistake that's easy to make and, critically, easy to <em>debug</em> once you know what Docker's actual error message is trying to tell you. None of them were fixed by guessing &mdash; each fix came from reading the specific error Docker Compose printed and tracing it back to the exact line responsible.</p>
+
+<h2>Connecting the app to the pantry</h2>
+<p>Once the container was confirmed healthy (via <code>docker ps</code> and <code>pg_isready</code>, not just "it looks like it started"), three lines in <code>application.properties</code> told the Spring Boot app where to find it:</p>
+<pre><code>spring.datasource.url=jdbc:postgresql://localhost:5432/parcel_delivery
+spring.datasource.username=parcel_app
+spring.datasource.password=devpassword</code></pre>
+<p>These three values have to match the container's <code>POSTGRES_*</code> settings exactly &mdash; a mismatch here produces a login rejection, not a "can't find it" error, which is a useful distinction when something doesn't connect.</p>
+
+<div class="callout info">
+  <span class="label">A deliberate shortcut, named honestly</span>
+  For most of this build, Hibernate was allowed to auto-create and adjust tables itself (<code>spring.jpa.hibernate.ddl-auto=update</code>), with the generated SQL printed to the console (<code>spring.jpa.show-sql=true</code>) so every table could be inspected the moment it was created. This is explicitly a <em>learning-phase</em> convenience, not a production pattern &mdash; real systems version their schema changes with migration tools like Flyway (which the old project actually used, and which this rebuild plans to reintroduce once the entity shapes fully settle).
+</div>
+
+</div>
+
+<!-- ================= CHAPTER 4 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 4</div>
+<h1 class="chapter-title">Modeling the World: Entities and Relationships</h1>
+
+<p>An <strong>Entity</strong> is just a regular Java class with a handful of special annotations that tell Hibernate "this class <em>is</em> a database table &mdash; when you save an object of this class, turn it into a row." Eight entities make up the whole system, and building them in a deliberate order &mdash; simplest first &mdash; meant every new relationship concept landed on top of a solid, already-understood foundation.</p>
+
+<h2>The cast of characters</h2>
+<ul>
+  <li><strong>Role</strong> &mdash; the simplest table: an id, a unique name ("Sender", "Driver", "Admin"), timestamps. No relationships at all.</li>
+  <li><strong>User</strong> &mdash; a name, email, hashed password, and a Role. The first entity with a real relationship.</li>
+  <li><strong>Driver</strong> &mdash; an optional extra profile a User can have: phone number, address. The first one-to-one relationship.</li>
+  <li><strong>Parcel</strong> &mdash; belongs to a User, has a name and description.</li>
+  <li><strong>RecipientAddress</strong> &mdash; also belongs to a User: an address, a recipient's phone and email.</li>
+  <li><strong>DeliveryStatus</strong> &mdash; a lookup table, just like Role: "Awaiting delivery", "Processing", "In transit", "Delivered".</li>
+  <li><strong>DeliveryRequest</strong> &mdash; the hub of the whole system: it ties together a User, a Parcel, a RecipientAddress, a DeliveryStatus, and (eventually, optionally) a Driver, plus a sender address and a delivery date.</li>
+  <li><strong>Rating</strong> &mdash; one-to-one with a DeliveryRequest: a single integer score.</li>
+</ul>
+
+<h2>Relationships, explained without the jargon first</h2>
+<p>Underneath, a relationship between two tables is just one table having a column that holds another table's ID &mdash; a foreign key. JPA's annotations are a way of writing that pointer as a normal Java field (<code>private Role role;</code>) instead of manually writing SQL joins everywhere.</p>
+
+<ul>
+  <li><strong>Many-to-one</strong> &mdash; many rows point at one row. Many Users can share one Role.</li>
+  <li><strong>One-to-many</strong> &mdash; the same relationship, viewed from the other side. One Role has many Users.</li>
+  <li><strong>One-to-one</strong> &mdash; exactly one row matches exactly one row. One User has at most one Driver profile.</li>
+  <li><strong>Many-to-many</strong> &mdash; rows on both sides can match several on the other. This system doesn't actually have one of these &mdash; a sign the data model is simpler than it could have been, which is a good thing.</li>
+</ul>
+
+<h2>Who "owns" the relationship</h2>
+<p>In a real database, the actual foreign key column has to physically live on one side only. Since <code>delivery_request.user_id</code> exists as a column on the <code>delivery_request</code> table (not the other way around), <code>DeliveryRequest</code> is the <strong>owning side</strong> &mdash; it holds the real pointer, declared with <code>@JoinColumn</code>. <code>User</code> would be the <strong>inverse side</strong> if it ever needed to look back ("give me all the delivery requests for this user") &mdash; but that reverse-lookup field was deliberately never added, because nothing in the system actually needed it yet. Adding relationships "just in case" is exactly how real codebases end up slow and tangled.</p>
+
+<h2>Lazy loading and the N+1 problem</h2>
+<p>Every relationship in this project uses <code>fetch = FetchType.LAZY</code>, deliberately, instead of the JPA default of eager loading. Eager loading means: load a User, and Hibernate <em>automatically</em> also loads their Role in the same breath, whether you asked for it or not. That sounds convenient, but it becomes a real performance trap once an entity has several relationships &mdash; loading one <code>DeliveryRequest</code> could silently drag in its User, Parcel, Driver, DeliveryStatus, <em>and</em> RecipientAddress, each as a separate database round-trip. This is called the <strong>N+1 problem</strong>: one query to get the list, N additional queries fired off one row at a time instead of one efficient combined query. It's one of the most commonly asked backend interview questions, and this project deliberately sets itself up to deal with it properly later (via explicit joins or targeted projections) rather than stumbling into it by accident.</p>
+
+<h2>Three real design decisions, made deliberately</h2>
+
+<div class="callout info">
+<span class="label">Decision: Driver &rarr; User cascade delete</span>
+If a User is deleted, should their Driver profile vanish automatically? Yes &mdash; a driver profile has no meaning without the user it belongs to. This is expressed with a Hibernate-specific annotation, <code>@OnDelete(action = OnDeleteAction.CASCADE)</code>, which bakes <code>ON DELETE CASCADE</code> directly into the real database constraint. This matters because JPA's own <code>cascade</code> attribute only works when a delete happens <em>through Hibernate</em> &mdash; it does nothing if a row is removed by a raw SQL script or an admin tool. The database-level annotation guarantees the rule holds no matter how the delete happens.
+</div>
+
+<div class="callout info">
+<span class="label">Decision: Parcel &rarr; User, no cascade</span>
+The opposite call, for a good reason: if a user is deleted, their parcels should <em>not</em> vanish &mdash; they may carry historical or audit value. The foreign key is left at its default behavior, <code>RESTRICT</code>, meaning Postgres will simply refuse to delete a user who still has parcels on record, forcing a deliberate decision rather than a silent data loss.
+</div>
+
+<div class="callout info">
+<span class="label">Decision: DeliveryRequest &rarr; Parcel, many-to-one on purpose</span>
+A direct question was asked during the build: "why isn't this a one-to-one? Can't the same parcel end up in two delivery requests?" The honest answer: it depends on a business rule that the old project never actually decided. The choice made here was deliberate &mdash; re-delivery attempts are a supported feature. If a delivery fails and a parcel is returned to the sender, a brand new <code>DeliveryRequest</code> row can be created for that same parcel, tracking a fresh attempt. If that business rule ever changes, the fix is one line: adding <code>unique = true</code> to the join column.
+</div>
+
+</div>
+
+<!-- ================= CHAPTER 5 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 5</div>
+<h1 class="chapter-title">Cutting the Boilerplate: Lombok</h1>
+
+<p>Every entity, up to this point, had been written with getters and setters typed out by hand &mdash; deliberately, on purpose, to feel the real cost of it before automating it away. By the time the sixth field appeared on the busiest entity in the system, the boilerplate pain was undeniable, and that was exactly the right moment to bring in <strong>Lombok</strong>.</p>
+
+<h2>What Lombok actually does</h2>
+<p>Lombok is a compile-time tool. It reads annotations like <code>@Getter</code> and <code>@Setter</code> on a class and <em>generates</em> the equivalent methods before the real Java compiler even sees them. Nothing magical happens at runtime &mdash; the final compiled class is indistinguishable from one written by hand. It's a shortcut in how the source is written, not a change in how the program behaves.</p>
+
+<h2>The dangerous shortcut that was deliberately avoided</h2>
+<div class="callout danger">
+<span class="label">Never use @Data on an entity</span>
+Lombok's <code>@Data</code> annotation generates getters, setters, <em>and</em> <code>equals()</code>/<code>hashCode()</code>/<code>toString()</code> all at once. On a JPA entity, this is a well-known, genuinely dangerous combination. Generated <code>equals()</code>/<code>hashCode()</code> would touch lazy-loaded relationships, silently triggering extra database queries just from putting an entity into a <code>HashSet</code>. Worse: an entity's <code>id</code> is <code>null</code> before it's saved and becomes a real number after &mdash; if <code>hashCode()</code> includes <code>id</code>, the object's hash code <em>changes</em> after saving, which breaks the fundamental rule that an object's hash code must stay stable while it sits in a hash-based collection. This project uses only <code>@Getter</code> and <code>@Setter</code> on entities, deliberately, everywhere.
+</div>
+
+<p>The payoff was immediate and visible: the <code>Rating</code> entity, built with Lombok from the start, ended up roughly twenty lines shorter than an equivalent hand-written version &mdash; and because the pain of writing it by hand had already been felt once, the shortcut meant something instead of being invisible magic copied from a tutorial.</p>
+
+</div>
+
+<!-- ================= CHAPTER 6 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 6</div>
+<h1 class="chapter-title">Repositories: Talking to the Database Without Writing SQL</h1>
+
+<p>A <strong>Repository</strong> in Spring Data JPA is an interface with no implementation written anywhere. Declare <code>extends JpaRepository&lt;Role, Long&gt;</code>, and Spring automatically builds a real, working implementation behind the scenes at startup &mdash; <code>save()</code>, <code>findById()</code>, <code>findAll()</code>, <code>delete()</code>, all for free.</p>
+
+<h2>Query derivation: the genuinely clever part</h2>
+<p>Declare a method like <code>findByEmail(String email)</code>, and Spring reads the <em>method name itself</em> and builds the SQL query from it &mdash; <code>WHERE email = ?</code> &mdash; with no annotation, no SQL, no implementation written. It understands relationships too: <code>findByUserId(Long userId)</code> on <code>DeliveryRequest</code> correctly produces <code>WHERE user_id = ?</code>, even though the actual field is called <code>user</code> (a <code>User</code> object, not a raw ID) &mdash; Spring walks into the relationship and finds <code>user.id</code> automatically.</p>
+
+<p>This isn't guesswork at startup, either &mdash; Spring Data JPA actually <em>validates</em> every derived method name against the entity's real properties the moment the application boots. A typo in a method name doesn't fail quietly; it fails loudly and immediately, with a clear error, before a single request is ever served.</p>
+
+<h2>A deliberate, principled choice: Optional everywhere</h2>
+<p>Every single-result lookup across all eight repositories returns <code>Optional&lt;T&gt;</code>, never the entity directly. This is the direct, structural fix for the old project's worst habit &mdash; <code>.orElse(null)</code> scattered through its services, silently turning "nothing found" into a null that could slip through and crash something unrelated much later. <code>Optional</code> forces whoever calls the method to explicitly decide what happens when nothing is found, right there, instead of deferring that decision into a landmine.</p>
+
+</div>
+
+<!-- ================= CHAPTER 7 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 7</div>
+<h1 class="chapter-title">DTOs and Mappers: Never Hand Over the Database Directly</h1>
+
+<p>An Entity is a database-shaped object &mdash; it exists to describe a table. A <strong>DTO</strong> (Data Transfer Object) is a deliberately separate, simple class that describes what actually travels over HTTP, in a request or a response. They can look similar for a simple entity like <code>Role</code>, but the separation earns its keep the moment a more sensitive entity like <code>User</code> enters the picture.</p>
+
+<h2>Three concrete reasons this isn't decoration</h2>
+<ol>
+  <li><strong>Security.</strong> <code>User</code>'s entity has a <code>password</code> field (holding a BCrypt hash, covered properly in the security chapter). If a controller ever accidentally returned the <code>User</code> entity directly, that hash would land straight in a JSON response, visible to anyone. A DTO that was never given a <code>password</code> field physically cannot leak one.</li>
+  <li><strong>Stability.</strong> Adding an internal field to an entity later &mdash; an audit flag, an internal note &mdash; would otherwise silently become part of the public API the moment it's added, whether that was intended or not. A DTO is a contract deliberately controlled by the author, not an accident of whatever the database happens to contain.</li>
+  <li><strong>Avoiding real crashes.</strong> Returning an entity with lazy-loaded relationships directly as JSON can throw a serialization error, because the library converting the object to JSON tries to read a relationship that was never actually loaded from the database in the first place.</li>
+</ol>
+
+<h2>The Mapper: the corrected "Factory"</h2>
+<p>This is the direct payoff of the correction made in Chapter 1. A <strong>Mapper</strong> is a small, dedicated class whose only job is converting between an Entity and its DTOs &mdash; exactly what the old project's misleadingly-named "Factory" classes actually did. Naming it correctly this time isn't pedantry; it's the difference between describing a pattern accurately under interview pressure and getting caught overstating it.</p>
+
+<pre><code>@Component
+public class RoleMapper {
+    public RoleResponseDTO toResponseDTO(Role role) {
+        RoleResponseDTO dto = new RoleResponseDTO();
+        dto.setId(role.getId());
+        dto.setName(role.getName());
+        return dto;
+    }
+}</code></pre>
+
+<p><code>@Component</code> here, rather than <code>@Service</code> or <code>@Repository</code>, is the generic Spring annotation meaning "let the framework manage this object, it doesn't fit a more specific category." It's worth knowing that <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code> are all actually built on top of <code>@Component</code> under the hood &mdash; just more specific labels for the same underlying mechanism.</p>
+
+</div>
+
+<!-- ================= CHAPTER 8 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 8</div>
+<h1 class="chapter-title">Services, Controllers, and Getting Errors Right</h1>
+
+<h2>Constructor injection over field injection</h2>
+<p>The old project wired its dependencies like this:</p>
+<pre><code>@Autowired
+private RoleRepository roleRepository;</code></pre>
+<p>This is <strong>field injection</strong> &mdash; Spring reaches directly into a private field via reflection and sets it after the object already exists. For a brief moment, the object technically exists in a half-built state, and more importantly, it's awkward to hand the object a fake dependency in a unit test without spinning up Spring's entire container.</p>
+
+<p>This rebuild uses <strong>constructor injection</strong> throughout instead, with Lombok's <code>@RequiredArgsConstructor</code> doing the typing:</p>
+<pre><code>@Service
+@RequiredArgsConstructor
+public class RoleService {
+    private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
+    ...
+}</code></pre>
+<p><code>@RequiredArgsConstructor</code> looks at every <code>final</code> field and generates a constructor taking exactly those as parameters. Spring sees a class with exactly one constructor and automatically uses it &mdash; no <code>@Autowired</code> needed anywhere. <code>final</code> also means the field can only be set once, at construction, which makes it structurally impossible for a service to exist with a missing dependency.</p>
+
+<div class="callout danger">
+<span class="label">A mistake that recurred three times</span>
+This single detail &mdash; forgetting the <code>final</code> keyword &mdash; caused the exact same class of bug three separate times during this build (first in <code>DeliveryRequestController</code>, then again in <code>AuthController</code>). Without <code>final</code>, Lombok generates an <em>empty</em> constructor instead (there's nothing to include), Spring has nothing to inject into, and the field stays <code>null</code> forever &mdash; guaranteeing a crash the instant the endpoint is actually called. It compiles perfectly cleanly. The bug only shows up at runtime, and only on the exact code path that uses the broken field. This is worth remembering precisely because it recurred: it's a specific, nameable mental-model gap, not a random typo, and naming it clearly is what finally made it stop happening.
+</div>
+
+<h2>Getting HTTP status codes right: a four-way taxonomy</h2>
+<p>The old project threw one generic exception type for every error condition, which meant "this doesn't exist" and "you sent me garbage" both came back as the same HTTP 400. This rebuild settled on four distinct categories, added one at a time, exactly when a real situation demanded each one:</p>
+
+<table>
+<tr><th>Exception</th><th>Status</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><code>ResourceNotFoundException</code></td><td>404</td><td>A specific thing the caller referenced by ID should exist, and doesn't.</td><td>Looking up a role by an ID that was deleted.</td></tr>
+<tr><td><code>BadRequestException</code></td><td>400</td><td>The caller's input itself is invalid.</td><td>Registering with an email that's already taken; an invalid role name.</td></tr>
+<tr><td><code>AuthenticationException</code> (Spring Security's own type)</td><td>401</td><td>The caller isn't who they claim to be.</td><td>Wrong password at login.</td></tr>
+<tr><td>Unmapped <code>RuntimeException</code> / <code>IllegalStateException</code></td><td>500</td><td>The system's own setup is broken &mdash; not the caller's fault.</td><td>The default "Awaiting delivery" status row is missing from the database.</td></tr>
+</table>
+
+<p>That last row deserves its own explanation, because it's a genuinely subtle distinction. When a new <code>DeliveryRequest</code> is created, it needs a default status &mdash; something the system itself is supposed to have seeded, not something the client provides. If that lookup ever came back empty, it would mean the system's own data is broken, which is neither the client's fault (not 400) nor quite the same flavor of "missing resource" as a normal 404. A plain <code>IllegalStateException</code>, deliberately <em>not</em> caught by the custom exception handler, falls through to Spring's own generic <code>500</code> &mdash; the client gets a safe, generic error with no internal details leaked, while the real cause (<code>"Default delivery status 'Awaiting delivery' is not seeded in the database"</code>) remains fully visible in the server's own logs, down to the exact file and line number.</p>
+
+<p>One more deliberate choice, tied to the 401 case: the error message for a failed login is always the same generic text &mdash; <code>"Invalid email or password"</code> &mdash; regardless of whether the email didn't exist or the password was simply wrong. Returning a different message for each case would let an attacker discover which email addresses are actually registered, one guess at a time. Same message, every time, regardless of which half was actually wrong.</p>
+
+<h2>All of this, wired together</h2>
+<pre><code>@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleAuthException(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid email or password"));
+    }
+}</code></pre>
+<p><code>@RestControllerAdvice</code> is a single class that catches exceptions thrown anywhere across every controller in the entire application &mdash; one place, instead of a repeated try/catch in every endpoint. This idea existed in the old project too (as <code>ApplicationExceptionHandler</code>); what changed is the discipline around which status code actually means what.</p>
+
+</div>
+
+<!-- ================= CHAPTER 9 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 9</div>
+<h1 class="chapter-title">The Core Business Flow, End to End</h1>
+
+<p>With entities, repositories, DTOs, mappers, services, and controllers all in place, the actual story the system tells came together as a sequence of real, working endpoints &mdash; each one verified not by reading the code and nodding, but by running it, calling it with real HTTP requests, and checking the actual rows that landed in Postgres afterward.</p>
+
+<h2>The flow, step by step</h2>
+<ol>
+  <li><strong>Register.</strong> <code>POST /api/users/register</code> &mdash; takes a name, email, password, and a role name. The password is hashed with BCrypt before it ever touches the database (full detail in Chapter 10). Registering with an email already in use, or a role name that doesn't exist, both correctly return <code>400</code>.</li>
+  <li><strong>Become a driver.</strong> <code>POST /api/drivers/create</code> &mdash; a user opts into a driver profile. Trying to do this twice for the same user correctly returns <code>400</code> ("already registered as a driver"); the duplicate check happens explicitly, before the database's own unique constraint would have caught it anyway, purely to produce a clean error message instead of a raw database exception leaking through.</li>
+  <li><strong>Create a parcel.</strong> <code>POST /api/parcels</code> &mdash; a sender describes something they want delivered.</li>
+  <li><strong>Add a recipient address.</strong> <code>POST /api/recipient-addresses</code> &mdash; where the parcel is actually going, and who's receiving it.</li>
+  <li><strong>Submit a delivery request.</strong> <code>POST /api/delivery-requests/create</code> &mdash; the hub action, tying a user, a parcel, and a recipient address together, with a status that defaults automatically to "Awaiting delivery" and no driver assigned yet.</li>
+  <li><strong>Assign a driver.</strong> <code>PATCH /api/delivery-requests/{id}/assign-driver</code> &mdash; the first use of <code>PATCH</code> in the project: mutating one field of something that already exists, rather than creating something new.</li>
+  <li><strong>Update delivery status.</strong> <code>PATCH /api/delivery-requests/{id}/status</code> &mdash; moving a request through "Processing", "In transit", "Delivered". An invalid status name returns <code>400</code>, reusing the exact same reasoning as an invalid role name at registration.</li>
+  <li><strong>Rate the delivery.</strong> <code>POST /api/ratings</code> &mdash; restricted, by a deliberate business decision, to only requests whose status is already "Delivered". Attempting to rate anything earlier in the lifecycle correctly returns <code>400</code>; attempting to rate the same delivery request twice also correctly returns <code>400</code>, for the same "defend against the obvious before the database has to" reasoning as the duplicate-driver check.</li>
+</ol>
+
+<div class="callout info">
+<span class="label">A real debugging story worth retelling</span>
+While building the delivery-request submission endpoint independently, a genuinely subtle bug surfaced: <code>DeliveryRequestMapper</code> called <code>deliveryRequest.getDriver().getId()</code> unconditionally. Right after creation, <code>getDriver()</code> returns <code>null</code> &mdash; that's not an edge case, it's the <em>normal</em> state, since no driver has been assigned yet. Calling <code>.getId()</code> on <code>null</code> crashes immediately. The fix connects directly back to Chapter 4's lesson about optional relationships: <em>nullable in the entity means every piece of code touching it must null-check</em>, with no exceptions. <code>deliveryRequest.getDriver() != null ? deliveryRequest.getDriver().getId() : null</code> fixed it, and the underlying lesson &mdash; that a design decision made early (making a field nullable) has real consequences for code written much later &mdash; is the kind of thing that only really sticks after it causes an actual bug.
+</div>
+
+<p>Every single step above was tested the same way, deliberately, every time: boot the real app, hit the real endpoint with <code>curl</code>, read the actual HTTP response, and then query Postgres directly to confirm the row that landed matches what was expected &mdash; never trusting a green checkmark without seeing the underlying data.</p>
+
+</div>
+
+<!-- ================= CHAPTER 10: JWT (own chapter, as requested) ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 10 &mdash; A Chapter of Its Own</div>
+<h1 class="chapter-title">JWT Authentication</h1>
+
+<p>This is the chapter that closes the single biggest security gap in the old project. The old JWT secret was the literal string <code>"password1"</code>, hardcoded in source and committed to version control. Rebuilding this properly, piece by piece, is the centerpiece of the whole security story.</p>
+
+<h2>What a JWT actually is &mdash; and isn't</h2>
+<p>A JSON Web Token is <strong>not encrypted</strong>. It's three chunks of base64-encoded text glued together with dots: <code>header.payload.signature</code>. Anyone can decode the middle part and read its contents in plain text &mdash; there's an entire public website (jwt.io) built around doing exactly that. What the signature buys is <strong>tamper-proofing</strong>, not secrecy: change a single character of the payload, and the signature no longer matches, so the server rejects it outright. The practical rule that falls out of this: never put anything genuinely secret (a real password, a card number) inside a JWT's contents &mdash; only things that are safe to be read by anyone holding the token, like an email address or a user ID.</p>
+
+<h2>Password hashing: BCrypt, and why it's deliberately slow</h2>
+<p>A password is never stored as typed &mdash; not even in a form the system's own operators could read back. It's run through a one-way function that turns <code>"mypassword123"</code> into something like <code>$2a$10$N9qo8uLOickgx2ZMRZoMy...</code>, with no way to reverse it. At login, the freshly typed password is hashed again and the two hashes are compared &mdash; the original is never "decrypted," because it can't be.</p>
+<p>BCrypt specifically is chosen because it's deliberately slow &mdash; it performs thousands of internal rounds of work by design. That sounds like a downside, but it's the entire point: a fast hash lets an attacker who steals a database try billions of password guesses per second; BCrypt limits that to a few hundred. Exposing the actual hashing mechanism as a Spring bean, rather than constructing it directly inside a service, follows the same "depend on the interface, not the implementation" principle used throughout this project:</p>
+<pre><code>@Configuration
+public class PasswordConfig {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}</code></pre>
+
+<h2>Generating and checking tokens: JwtUtil</h2>
+<p>A modern JWT library (<code>jjwt 0.12.6</code>) replaced the old project's <code>jjwt 0.9.1</code> &mdash; and the API itself genuinely changed in that time, confirmed not by memory but by letting the real compiler validate the new fluent syntax:</p>
+<pre><code>public String generateToken(String email) {
+    Date now = new Date();
+    Date expiry = new Date(now.getTime() + expirationMs);
+    return Jwts.builder()
+            .subject(email)
+            .issuedAt(now)
+            .expiration(expiry)
+            .signWith(getSigningKey())
+            .compact();
+}</code></pre>
+<p>The secret itself is read from an environment variable, with a clearly-labeled local-only fallback for convenience &mdash; <code>jwt.secret=${JWT_SECRET:this-is-only-a-local-dev-secret-change-it-before-any-real-deploy}</code> &mdash; the direct structural fix for the old hardcoded string. It's worth noting that HS256 signing has a genuine minimum key length (256 bits / 32 bytes); the old secret, at nine characters, was not just bad practice but <em>too short</em> to be cryptographically sound even if it had been kept private.</p>
+
+<h2>Telling Spring Security how to find a user</h2>
+<p><code>UserDetailsService</code> is a one-method contract: given an identifier, return the username, password hash, and roles. The method is confusingly named <code>loadUserByUsername</code> even though this project passes it an email &mdash; that's just historical naming baked into the interface itself.</p>
+<pre><code>public UserDetails loadUserByUsername(String email) {
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -&gt; new UsernameNotFoundException("No user found with email: " + email));
+
+    return new org.springframework.security.core.userdetails.User(
+            user.getEmail(),
+            user.getPassword(),
+            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().toUpperCase())));
+}</code></pre>
+<p><code>UsernameNotFoundException</code> is deliberately not the project's own custom exception &mdash; Spring Security watches for this specific type internally, and turns it into a generic authentication failure, preventing "that email doesn't exist" from ever being distinguishable from "wrong password" to an outside observer. The prefix <code>"ROLE_"</code> on the authority string is a Spring Security convention: a later check like <code>hasRole("ADMIN")</code> is secretly checking for an authority literally spelled <code>"ROLE_ADMIN"</code> &mdash; forgetting the prefix is a classic, quietly-broken bug.</p>
+
+<h2>Checking the token on every request: JwtAuthFilter</h2>
+<p>This is a <strong>filter</strong>, not a controller &mdash; and that distinction matters enormously. Filters run <em>before</em> Spring routes a request to any controller, which means the custom <code>@RestControllerAdvice</code> error handler from Chapter 8 never sees anything thrown from inside one. A bad or expired token has to be handled locally, right there, by simply treating the request as unauthenticated rather than letting an exception escape into an ugly default error page:</p>
+<pre><code>try {
+    String email = jwtUtil.extractEmail(token);
+    if (email != null &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        if (jwtUtil.isTokenValid(token, email)) {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+    }
+} catch (Exception e) {
+    // Malformed, expired, or tampered token - leave the request unauthenticated.
+}</code></pre>
+<p><code>SecurityContextHolder</code> is best understood as "who is authenticated, for this one request, on this one thread" &mdash; once set here, every later piece of code handling this same request can ask who's logged in.</p>
+
+<h2>The config that wires it all together: SecurityConfig</h2>
+<p>The old project's <code>WebSecurityConfigurerAdapter</code> base class has been <em>removed entirely</em> from current Spring Security &mdash; this isn't a style preference, the old code genuinely would not compile against a current version. The replacement is a <code>@Bean</code> method returning a built <code>SecurityFilterChain</code>:</p>
+<pre><code>@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -&gt; csrf.disable())
+        .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -&gt; auth
+            .requestMatchers("/api/auth/**", "/api/users/register").permitAll()
+            .anyRequest().authenticated())
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+}</code></pre>
+<p>CSRF protection exists to stop a malicious website from tricking a browser into reusing an existing <em>session cookie</em>. This system never uses cookies &mdash; the token travels explicitly in an <code>Authorization</code> header on every request, which a malicious site has no way to silently attach &mdash; so disabling CSRF here is the architecturally correct choice, not a shortcut. <code>SessionCreationPolicy.STATELESS</code> tells Spring Security to never create or rely on a server-side session at all: every request proves who it is from scratch, which is the actual reason JWTs scale well across multiple servers with no shared state to coordinate.</p>
+
+<h2>The login endpoint</h2>
+<pre><code>public AuthResponseDTO login(AuthRequestDTO dto) {
+    authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword()));
+
+    User user = userRepository.findByEmail(dto.getEmail())
+            .orElseThrow(() -&gt; new ResourceNotFoundException("User not found with email: " + dto.getEmail()));
+
+    AuthResponseDTO response = new AuthResponseDTO();
+    response.setToken(jwtUtil.generateToken(user.getEmail()));
+    response.setEmail(user.getEmail());
+    response.setRoleName(user.getRole().getName());
+    return response;
+}</code></pre>
+<p>The one line doing all the real work is <code>authenticationManager.authenticate(...)</code> &mdash; it uses <code>CustomUserDetailsService</code> to look the user up, then <code>PasswordEncoder</code> to check the submitted password against the stored BCrypt hash, throwing the Chapter 8 <code>AuthenticationException</code> if either step fails. The application's own code never compares a password itself, anywhere.</p>
+
+<h2>The hardest bug of the entire project</h2>
+<div class="callout danger">
+<span class="label">Case study: the LazyInitializationException</span>
+<p>Everything above compiled cleanly, booted cleanly, and still failed in a way that wasn't obvious from reading the code: a genuinely <em>valid</em> JWT, presented to a protected endpoint, still came back <code>403</code> &mdash; identical to having no token at all. The filter was clearly running (confirmed via Spring Security's own debug logging), but something inside it was silently failing, swallowed by an empty <code>catch</code> block that had no logging at all.</p>
+<p>Temporarily printing the real stack trace revealed the true cause:</p>
+<pre><code>org.hibernate.LazyInitializationException:
+Could not initialize proxy [Role#1] - no session</code></pre>
+<p>The exact line: <code>user.getRole().getName()</code>, inside <code>CustomUserDetailsService</code>.</p>
+<p>Here's the genuinely non-obvious part. Back in Chapter 4, Spring Boot had warned, at every single boot, about <code>spring.jpa.open-in-view</code> being enabled by default &mdash; a setting that keeps a database session open for the duration of a request so that lazy relationships can still be read later, without needing to plan every query upfront. The natural assumption is that this covers the <em>entire</em> HTTP request. It doesn't. <code>open-in-view</code>'s session is scoped specifically around Spring MVC's handling of a request &mdash; and Spring Security's filters, including the custom <code>JwtAuthFilter</code>, run <strong>before</strong> MVC even starts. By the time the filter tried to read <code>user.getRole()</code>, no database session existed yet for this request at all.</p>
+<p>The fix is small, and it's the first genuine use of <code>@Transactional</code> anywhere in this entire rebuild &mdash; a gap flagged as missing all the way back when the old project's multi-table write methods were first reviewed in Chapter 1:</p>
+<pre><code>@Override
+@Transactional(readOnly = true)
+public UserDetails loadUserByUsername(String email) { ... }</code></pre>
+<p><code>@Transactional</code> opens its own session for exactly as long as the method needs it, independent of where in the request pipeline the method is actually called from. This single bug taught something that no amount of reading about Spring Security would have made as memorable: <em>open-in-view and Spring Security's filter chain operate in two different windows of time, and code that assumes otherwise will eventually break in exactly this way.</em></p>
+</div>
+
+<h2>The real payoff: removing trust in the client entirely</h2>
+<p>With authentication genuinely working, the last and most important step was going back through every endpoint that had been quietly trusting a client-supplied <code>userId</code> in its request body &mdash; <code>Parcel</code>, <code>RecipientAddress</code>, <code>Driver</code>, and <code>DeliveryRequest</code> creation &mdash; and removing that field entirely. A small helper reads the real, token-verified identity directly:</p>
+<pre><code>@Component
+@RequiredArgsConstructor
+public class CurrentUserProvider {
+    private final UserRepository userRepository;
+
+    public User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -&gt; new ResourceNotFoundException("Authenticated user not found: " + email));
+    }
+}</code></pre>
+<p>No controller needed to change at all &mdash; <code>SecurityContextHolder</code> is readable from inside a service directly, since it's scoped to the whole request thread, not just to controllers. Verified with a completely fresh second user: registered, logged in, and created a parcel, a recipient address, a driver profile, and a delivery request with no <code>userId</code> anywhere in any request body &mdash; and every single row that landed in Postgres correctly carried that user's real, token-derived ID. It is now structurally impossible for a client to create something "as" a different user by tampering with a request body, because there's no field left to tamper with.</p>
+
+</div>
+
+<!-- ================= CHAPTER 11 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 11</div>
+<h1 class="chapter-title">The Bugs That Taught the Most</h1>
+
+<p>A rebuild like this produces two kinds of value: the working code, and the specific mistakes caught along the way. The second kind is often more durable &mdash; a bug you've personally hit and diagnosed sticks in a way that reading about it never quite does. This chapter collects the ones worth remembering on purpose.</p>
+
+<table>
+<tr><th>Bug</th><th>Root cause</th><th>Why it's worth remembering</th></tr>
+<tr><td>Hidden <code>.mvn</code> folder lost during unzip</td><td>Finder silently drops dotfiles when extracting a zip</td><td>Command-line tools (<code>curl</code> + <code>unzip</code>) don't have this blind spot.</td></tr>
+<tr><td>Wrong Spring Boot version string</td><td>Trusted a metadata field's legacy naming convention instead of checking the real artifact registry</td><td>When the ecosystem moves fast, verify against the live source of truth, not memory.</td></tr>
+<tr><td>Missing <code>created_at</code>/<code>updated_at</code> on every record</td><td>Nothing was ever written to set them</td><td>Fixed once, properly, with <code>@CreationTimestamp</code>/<code>@UpdateTimestamp</code> across all eight entities &mdash; better than patching it eight separate times later.</td></tr>
+<tr><td>Controller fields not <code>final</code> (three separate occurrences)</td><td>Misunderstanding of exactly what <code>@RequiredArgsConstructor</code> actually requires</td><td>Compiles perfectly; fails only at runtime, only on the exact path that uses it. A specific, nameable gap, not a random slip.</td></tr>
+<tr><td>Unguarded <code>getDriver().getId()</code></td><td>Forgetting that a field deliberately made nullable (Chapter 4) must be null-checked everywhere it's touched</td><td>A design decision made early has consequences for code written much later.</td></tr>
+<tr><td>Client-suppliable <code>driverId</code>/<code>deliveryStatusId</code> on delivery-request creation</td><td>Scope correction, not a code bug</td><td>A client should never be able to choose their own starting status or assign their own driver.</td></tr>
+<tr><td>Login endpoint path didn't match the security config's permit-list</td><td><code>/api/login</code> instead of <code>/api/auth/login</code></td><td>Would have created a genuine deadlock: no way to get a token without already having one.</td></tr>
+<tr><td>Valid JWT still rejected with 403</td><td><code>LazyInitializationException</code> inside a security filter, outside <code>open-in-view</code>'s scope</td><td>The hardest, most instructive bug of the entire project &mdash; full case study in Chapter 10.</td></tr>
+</table>
+
+<div class="callout info">
+<span class="label">A pattern worth naming explicitly</span>
+Several of these bugs compiled without any error at all and only surfaced when the application was actually <em>run</em> and tested with real requests. This is the entire reason every single lesson in this project ended with booting the real app, calling it with <code>curl</code>, and checking the actual data in Postgres &mdash; never trusting that code "looks right" as a substitute for watching it work.
+</div>
+
+</div>
+
+<!-- ================= CHAPTER 12 ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Chapter 12</div>
+<h1 class="chapter-title">What's Left: The Road to Production</h1>
+
+<p>Everything up to this point forms a genuinely complete core: a full relational data model, a full business flow, and real authentication with zero trust placed in anything a client claims about its own identity. What's left is the layer that separates "a working backend" from "something you'd actually trust running in production."</p>
+
+<ul>
+  <li><strong>Transactions.</strong> <code>@Transactional</code> has been used exactly once so far (the security fix in Chapter 10). Several service methods still write across multiple repositories without an explicit transaction boundary &mdash; the original concern raised about the old project in Chapter 1, not yet fully resolved.</li>
+  <li><strong>Caching.</strong> Redis, for data that's read far more often than it changes.</li>
+  <li><strong>Events.</strong> Kafka or RabbitMQ, so a delivery status change can notify other parts of the system (or, eventually, a separate notifications service) without that service needing to be called synchronously and directly.</li>
+  <li><strong>Testing.</strong> Unit tests, plus integration tests against a real database using Testcontainers &mdash; verifying with a script run by hand, as this entire project has done, doesn't scale, and doesn't protect against regressions.</li>
+  <li><strong>Flyway migrations.</strong> Replacing the convenient-but-temporary <code>ddl-auto=update</code> and the manual SQL seeding used throughout this build with proper, versioned migration files &mdash; which is what the old project actually did correctly, and what this rebuild intends to bring back once the schema has fully settled.</li>
+  <li><strong>CI/CD and a real deployment.</strong> A pipeline that runs tests automatically, and an actual small deployment somewhere real, rather than only ever running on one developer's machine.</li>
+  <li><strong>Observability.</strong> Structured logs, metrics, and tracing &mdash; the tools that let someone understand what a running system is actually doing, rather than only what it's supposed to do.</li>
+  <li><strong>The polyglot split, done properly.</strong> One deliberate service &mdash; originally planned as notifications or delivery tracking &mdash; carved out into a second language, talking to this Spring Boot core over a real contract. Not four parallel rewrites of the same CRUD app, which was the plan explicitly rejected back in Chapter 1.</li>
+</ul>
+
+<p>The honest assessment, given mid-project: a 6 out of 10 at this point &mdash; strong on data modeling, dependency injection, and error-handling correctness, with no security, validation, transactions, tests, or deployment pipeline yet. Projected to a 9 out of 10 once this remaining list is actually built &mdash; not a 10, because no single project, however complete, teaches distributed-systems depth at real scale, or the texture of running something under genuine production load for months. That comes from the job itself, not from any solo rebuild. Which was, in the end, always the honest point of doing this at all.</p>
+
+</div>
+
+<!-- ================= APPENDIX ================= -->
+<div class="chapter">
+<div class="chapter-kicker">Appendix</div>
+<h1 class="chapter-title">Glossary of Terms</h1>
+
+<dl class="glossary">
+<dt>Entity</dt>
+<dd>A Java class annotated so Hibernate treats it as a database table &mdash; one object per row.</dd>
+
+<dt>DTO (Data Transfer Object)</dt>
+<dd>A plain class describing what travels over HTTP, deliberately separate from the entity it's related to.</dd>
+
+<dt>Mapper</dt>
+<dd>A small class converting between an Entity and its DTOs. What the old project mistakenly called a "Factory."</dd>
+
+<dt>Repository</dt>
+<dd>An interface, with no implementation written by hand, that Spring Data JPA fulfills automatically for talking to the database.</dd>
+
+<dt>Service</dt>
+<dd>A class holding business logic &mdash; the rules of what's allowed to happen, independent of both HTTP and raw data access.</dd>
+
+<dt>Controller</dt>
+<dd>A class mapping specific HTTP verbs and URL paths to specific methods, turning requests into calls on a service.</dd>
+
+<dt>Constructor injection</dt>
+<dd>Supplying a class's dependencies through its constructor (ideally auto-generated by Lombok's <code>@RequiredArgsConstructor</code> over <code>final</code> fields), rather than having Spring reach into private fields after the fact.</dd>
+
+<dt>Lazy loading / <code>FetchType.LAZY</code></dt>
+<dd>A relationship is only actually fetched from the database when it's explicitly asked for, rather than automatically, every time the owning object is loaded.</dd>
+
+<dt>N+1 problem</dt>
+<dd>Loading a list of N items, then unintentionally firing one additional query per item to fetch each one's related data &mdash; N+1 total queries where one well-written query would have done.</dd>
+
+<dt>Cascade delete</dt>
+<dd>A database rule stating that deleting one row should automatically delete related rows, rather than leaving orphaned data behind.</dd>
+
+<dt>JWT (JSON Web Token)</dt>
+<dd>A signed, non-encrypted token proving who a request claims to be, without the server needing to remember anything between requests.</dd>
+
+<dt>BCrypt</dt>
+<dd>A deliberately slow, one-way hashing algorithm used to store passwords safely &mdash; the original can never be recovered from the stored hash.</dd>
+
+<dt>Filter (Servlet Filter)</dt>
+<dd>Code that runs on every incoming request before it's routed to any controller &mdash; where JWT validation happens, outside the reach of controller-level error handling.</dd>
+
+<dt>SecurityContextHolder</dt>
+<dd>Spring Security's way of tracking "who is authenticated, right now, for this one request."</dd>
+
+<dt><code>@Transactional</code></dt>
+<dd>Marks a method as needing its own database session/transaction boundary for its entire duration &mdash; independent of whatever else may or may not have a session open around it.</dd>
+
+<dt>LazyInitializationException</dt>
+<dd>Thrown when code tries to read a lazily-loaded relationship after the database session that could have fetched it has already closed.</dd>
+
+<dt>CSRF (Cross-Site Request Forgery)</dt>
+<dd>An attack where a malicious site tricks a browser into reusing an existing session cookie. Irrelevant to a stateless, header-based JWT API, which is why it's safely disabled here.</dd>
+
+<dt>Idempotency</dt>
+<dd>The property that doing something twice has the same effect as doing it once &mdash; not yet implemented in this project, but a known item on the production-hardening list.</dd>
+</dl>
+
+<p class="footer-note">End of first edition. This book is a living document &mdash; expect it to grow a chapter at a time, alongside the project it describes.</p>
+
+</div>
+
+</body>
+</html>
