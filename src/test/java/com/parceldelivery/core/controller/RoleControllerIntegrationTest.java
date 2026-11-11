@@ -34,7 +34,6 @@ public class RoleControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-
     void createRole_returnsCreatedAndPersists() throws Exception {
         mockMvc.perform(post("/api/roles")
                 .with(user("testuser"))
