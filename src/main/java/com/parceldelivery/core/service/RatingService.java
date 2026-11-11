@@ -11,6 +11,7 @@ import com.parceldelivery.core.repository.DeliveryRequestRepository;
 import com.parceldelivery.core.repository.RatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class RatingService {
     private final DeliveryRequestRepository deliveryRequestRepository;
     private final RatingMapper ratingMapper;
 
+    @Transactional
     public RatingResponseDTO rateDelivery(RatingRequestDTO dto) {
         DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(dto.getDeliveryRequestId())
                 .orElseThrow(() -> new ResourceNotFoundException(

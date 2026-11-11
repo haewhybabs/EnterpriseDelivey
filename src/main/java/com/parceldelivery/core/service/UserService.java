@@ -3,6 +3,7 @@ package com.parceldelivery.core.service;
 import com.parceldelivery.core.exception.BadRequestException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.parceldelivery.core.dto.UserRequestDTO;
 import com.parceldelivery.core.dto.UserResponseDTO;
@@ -22,6 +23,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public UserResponseDTO register(UserRequestDTO dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new BadRequestException("Email already in use: " + dto.getEmail());

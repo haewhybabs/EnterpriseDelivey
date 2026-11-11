@@ -1,6 +1,8 @@
 package com.parceldelivery.core.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.parceldelivery.core.exception.BadRequestException;
 import com.parceldelivery.core.dto.DriverRequestDTO;
 import com.parceldelivery.core.dto.DriverResponseDTO;
@@ -19,6 +21,7 @@ public class DriverService {
     private final CurrentUserProvider currentUserProvider;
     private final DriverMapper driverMapper;
 
+    @Transactional
     public DriverResponseDTO becomeDriver(DriverRequestDTO dto) {
         User user = currentUserProvider.getCurrentUser();
 

@@ -1,6 +1,7 @@
 package com.parceldelivery.core.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.parceldelivery.core.dto.AssignDriverRequestDTO;
 import com.parceldelivery.core.dto.DeliveryRequestRequestDTO;
@@ -27,69 +28,74 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class DeliveryRequestService {
-    private static final String DEFAULT_STATUS = "Awaiting delivery";
-    private final DeliveryRequestRepository deliveryRequestRepository;
-    private final CurrentUserProvider currentUserProvider;
-    private final DeliveryStatusRepository deliveryStatusRepository;
-    private final ParcelRepository parcelRepository;
-    private final RecipientAddressRepository recipientAddressRepository;
-    private final DriverRepository driverRepository;
-    private final DeliveryRequestMapper deliveryRequestMapper;
+        private static final String DEFAULT_STATUS = "Awaiting delivery";
+        private final DeliveryRequestRepository deliveryRequestRepository;
+        private final CurrentUserProvider currentUserProvider;
+        private final DeliveryStatusRepository deliveryStatusRepository;
+        private final ParcelRepository parcelRepository;
+        private final RecipientAddressRepository recipientAddressRepository;
+        private final DriverRepository driverRepository;
+        private final DeliveryRequestMapper deliveryRequestMapper;
 
-    public DeliveryRequestResponseDTO createDeliveryRequest(DeliveryRequestRequestDTO dto) {
-        User user = currentUserProvider.getCurrentUser();
+        @Transactional
+        public DeliveryRequestResponseDTO createDeliveryRequest(DeliveryRequestRequestDTO dto) {
+                User user = currentUserProvider.getCurrentUser();
 
-        DeliveryStatus deliveryStatus = deliveryStatusRepository.findByName(DEFAULT_STATUS)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Default delivery status '" + DEFAULT_STATUS + "' is not seeded in the database"));
+                DeliveryStatus deliveryStatus = deliveryStatusRepository.findByName(DEFAULT_STATUS)
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Default delivery status '" + DEFAULT_STATUS
+                                                                + "' is not seeded in the database"));
 
-        Parcel parcel = parcelRepository.findById(dto.getParcelId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Parcel not found with id " + dto.getParcelId()));
+                Parcel parcel = parcelRepository.findById(dto.getParcelId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Parcel not found with id " + dto.getParcelId()));
 
-        RecipientAddress recipientAddress = recipientAddressRepository.findById(dto.getRecipientAddressId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Recipient address not found with id " + dto.getRecipientAddressId()));
+                RecipientAddress recipientAddress = recipientAddressRepository.findById(dto.getRecipientAddressId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Recipient address not found with id " + dto.getRecipientAddressId()));
 
-        DeliveryRequest deliveryRequest = new DeliveryRequest();
-        deliveryRequest.setUser(user);
-        deliveryRequest.setDeliveryStatus(deliveryStatus);
-        deliveryRequest.setParcel(parcel);
-        deliveryRequest.setDeliveryDate(dto.getDeliveryDate());
-        deliveryRequest.setRecipientAddress(recipientAddress);
-        deliveryRequest.setSenderAddress(dto.getSenderAddress());
+                DeliveryRequest deliveryRequest = new DeliveryRequest();
+                deliveryRequest.setUser(user);
+                deliveryRequest.setDeliveryStatus(deliveryStatus);
+                deliveryRequest.setParcel(parcel);
+                deliveryRequest.setDeliveryDate(dto.getDeliveryDate());
+                deliveryRequest.setRecipientAddress(recipientAddress);
+                deliveryRequest.setSenderAddress(dto.getSenderAddress());
 
-        DeliveryRequest saved = deliveryRequestRepository.save(deliveryRequest);
-        return deliveryRequestMapper.toResponseDTO(saved);
-    }
+                DeliveryRequest saved = deliveryRequestRepository.save(deliveryRequest);
+                return deliveryRequestMapper.toResponseDTO(saved);
+        }
 
-    public DeliveryRequestResponseDTO assignDriver(Long deliveryRequestId, AssignDriverRequestDTO dto) {
-        DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(deliveryRequestId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Delivery request not found with id: " + deliveryRequestId));
+        @Transactional
+        public DeliveryRequestResponseDTO assignDriver(Long deliveryRequestId, AssignDriverRequestDTO dto) {
+                DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(deliveryRequestId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Delivery request not found with id: " + deliveryRequestId));
 
-        Driver driver = driverRepository.findById(dto.getDriverId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Driver not found with id: " + dto.getDriverId()));
+                Driver driver = driverRepository.findById(dto.getDriverId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Driver not found with id: " + dto.getDriverId()));
 
-        deliveryRequest.setDriver(driver);
+                deliveryRequest.setDriver(driver);
 
-        DeliveryRequest saved = deliveryRequestRepository.save(deliveryRequest);
-        return deliveryRequestMapper.toResponseDTO(saved);
-    }
+                DeliveryRequest saved = deliveryRequestRepository.save(deliveryRequest);
+                return deliveryRequestMapper.toResponseDTO(saved);
+        }
 
-    public DeliveryRequestResponseDTO updateStatus(Long deliveryRequestId, UpdateDeliveryStatusRequestDTO dto) {
-        DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(deliveryRequestId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Delivery request not found with id: " + deliveryRequestId));
+        @Transactional
+        public DeliveryRequestResponseDTO updateStatus(Long deliveryRequestId, UpdateDeliveryStatusRequestDTO dto) {
+                DeliveryRequest deliveryRequest = deliveryRequestRepository.findById(deliveryRequestId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Delivery request not found with id: " + deliveryRequestId));
 
-        DeliveryStatus status = deliveryStatusRepository.findByName(dto.getStatusName())
-                .orElseThrow(() -> new BadRequestException("Invalid delivery status: " + dto.getStatusName()));
+                DeliveryStatus status = deliveryStatusRepository.findByName(dto.getStatusName())
+                                .orElseThrow(() -> new BadRequestException(
+                                                "Invalid delivery status: " + dto.getStatusName()));
 
-        deliveryRequest.setDeliveryStatus(status);
+                deliveryRequest.setDeliveryStatus(status);
 
-        DeliveryRequest saved = deliveryRequestRepository.save(deliveryRequest);
-        return deliveryRequestMapper.toResponseDTO(saved);
-    }
+                DeliveryRequest saved = deliveryRequestRepository.save(deliveryRequest);
+                return deliveryRequestMapper.toResponseDTO(saved);
+        }
 
 }
