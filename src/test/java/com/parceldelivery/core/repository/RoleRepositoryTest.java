@@ -31,12 +31,12 @@ public class RoleRepositoryTest {
     @Test
     void findByName_returnsRole_whenExists() {
         Role role = new Role();
-        role.setName("Admin");
+        role.setName("TestOnlyRole");
         roleRepository.save(role);
 
-        Optional<Role> found = roleRepository.findByName("Admin");
+        Optional<Role> found = roleRepository.findByName("TestOnlyRole");
         assertTrue(found.isPresent());
-        assertEquals("Admin", found.get().getName());
+        assertEquals("TestOnlyRole", found.get().getName());
     }
 
     @Test
